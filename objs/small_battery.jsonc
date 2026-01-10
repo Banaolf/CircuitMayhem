@@ -1,0 +1,19 @@
+{ // Example component
+    "small_battery": { //Name of the component
+        "display_name": "Small Battery", //Display name
+        "img": "small_battery.png", //Sprite
+        "scale": 1, //Scale of the sprite
+        "position": [0, 0], //Position when placed
+        "connectivity": 2, //How many wires can connect to it
+        "generator": false, //Is it a power generator?
+        "max_energy": 1.5, //Maximum energy storage in RUX
+        "consume": 0, //RUX consumption rate per hour
+        "thermal_cost": 0.05, //Heat generated per RUX consumed
+        "max_output": 0.5, //Maximum output in RUX per second
+        "inputs": [0, 3], //Input connection points
+        "outputs": [1, 2], //Output connection points
+        "integrity": 100, //Durability of the component
+        "hazardous_temperature": 80, //Temperature at which the component starts to take damage
+        "cooling_rate": 0.1 //Rate at which the component cools down per second
+    }
+} // DO NOT USE PROPERTIES NOT IN THIS EXAMPLE, as it will cause errors
