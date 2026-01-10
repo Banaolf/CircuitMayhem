@@ -1,3 +1,4 @@
+# Not really working to launch the game, install Python 3.14.2 and arcade and execute the "CircuitMayhem.exe"
 import sys
 import os
 import arcade
