@@ -46,6 +46,6 @@ if __name__ == "__main__":
         subprocess.call([sys.executable, str(game_script)])
     else:
         # Development mode logic
-        vbs_script = Path(__file__).parent / "error_popup.vbs"
+        vbs_script = (appdata / "CircuitMayhem" / "error_popup.vbs")
         subprocess.Popen(["wscript.exe", str(vbs_script)], shell=True)
         sys.exit(0)

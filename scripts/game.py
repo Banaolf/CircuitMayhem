@@ -1,4 +1,5 @@
 import arcade
+import os
 import json
 from pathlib import Path
 
@@ -9,6 +10,10 @@ from baseclasses import GridManager, ComponentRegistry, SPRITE_DIR
 SCREEN_WIDTH, SCREEN_HEIGHT = arcade.get_display_size()
 TILE_SIZE = 16 # ALSO UPDATE IN BASECLASSES.PY IF CHANGED
 SIDEBAR_WIDTH = 200
+
+appdata = Path(os.getenv("LOCALAPPDATA"))
+
+ROOT_FOLDER = appdata / "CircuitMayhem"
 
 class Sidebar:
     def __init__(self, registry):
@@ -53,7 +58,7 @@ class CircuitMayhem(arcade.Window):
         arcade.set_background_color(arcade.color.AIR_SUPERIORITY_BLUE)
         
         # Path setup
-        self.objs_path = Path(__file__).parent.parent / "objs"
+        self.objs_path = ROOT_FOLDER / "objs"
         
         # Core Systems
         self.grid_manager = GridManager(tile_size=TILE_SIZE)
