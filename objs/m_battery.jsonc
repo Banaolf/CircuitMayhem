@@ -1,0 +1,18 @@
+{
+    "medium_battery": { 
+        "display_name": "Medium Battery",
+        "img": "yipi.png", 
+        "scale": 1, 
+        "connectivity": 2, 
+        "generator": false,
+        "max_energy": 1.5, 
+        "consume": 0,
+        "thermal_cost": 0.05,
+        "max_output": 0.5,
+        "inputs": [0, 3],
+        "outputs": [1, 2],
+        "integrity": 115,
+        "hazardous_temperature": 75,
+        "cooling_rate": 0.09
+    }
+} 

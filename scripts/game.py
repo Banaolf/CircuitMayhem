@@ -26,7 +26,7 @@ class Sidebar:
         
         for i, (comp_id, data) in enumerate(registry.blueprints.items()):
             # Create icon
-            icon = arcade.Sprite(SPRITE_DIR / data['img'], scale=1.0)
+            icon = arcade.Sprite(data['_tex_off'], scale=2)
             icon.center_x = self.width // 2
             icon.center_y = SCREEN_HEIGHT - 60 - (i * 100)
             icon.comp_id = comp_id  # Link the icon to the registry ID

@@ -1,4 +1,4 @@
-{ // Example component
+{ // Example component, using JSONC is supported but not recommended
     "small_battery": { //Name of the component
         "display_name": "Small Battery", //Display name
         "img": "small_battery.png", //Sprite

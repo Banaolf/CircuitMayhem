@@ -210,7 +210,7 @@ class ComponentRegistry:
             try:
                 data['_tex_off'] = arcade.load_texture(self.sprite_dir / data['img'])
             except Exception as e:
-                data['_tex_off'] = None
+                data['_tex_off'] = arcade.load_texture(self.sprite_dir / "default.png")
                 print(f"Failed to load texture for {comp_id}: {e}")
 
             if data.get('img_on'):
@@ -223,6 +223,7 @@ class ComponentRegistry:
                 data['_tex_on'] = None
 
         print(f"Registry: {len(self.blueprints)} blueprints pre-cached.")
+        print(self.blueprints)
 
     def create_component(self, comp_id, grid_pos):
         data = self.blueprints.get(comp_id)
