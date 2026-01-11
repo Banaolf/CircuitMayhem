@@ -1,5 +1,6 @@
 import arcade
 import os
+from arcade import gui
 import json
 from pathlib import Path
 
@@ -56,6 +57,7 @@ class CircuitMayhem(arcade.Window):
     def __init__(self):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Circuit Mayhem", fullscreen=True)
         arcade.set_background_color(arcade.color.AIR_SUPERIORITY_BLUE)
+        self.buttons = arcade.SpriteList()
         
         # Path setup (prefer repo `objs` for development; fall back to LOCALAPPDATA)
         repo_objs = Path(__file__).parent.parent / "objs"
@@ -72,6 +74,7 @@ class CircuitMayhem(arcade.Window):
         # Rendering
         self.component_list = arcade.SpriteList()
         self.sidebar = None
+        self.manager = None
         
         # Interaction
         self.selected_comp_id = None
@@ -82,6 +85,23 @@ class CircuitMayhem(arcade.Window):
         """ Initialize the board and registry """
         self.registry.load_all_from_objs()
         self.sidebar = Sidebar(self.registry)
+        
+        # --- UI Setup ---
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+        # Create a button
+        exit_button = arcade.gui.UIFlatButton(text="Exit", width=100)
+        
+        # Handle click
+        @exit_button.event("on_click")
+        def on_click_exit(event):
+            self.close()
+
+        # Position in Top-Left using UIAnchorLayout
+        layout = gui.UIAnchorLayout()
+        layout.add(child=exit_button, anchor_x="left", anchor_y="top", align_x=10, align_y=-10)
+        self.manager.add(layout)
 
     def add_to_grid(self, x, y, component):
         """Helper to keep sprite list and logic grid in sync"""
@@ -106,8 +126,12 @@ class CircuitMayhem(arcade.Window):
             arcade.draw_sprite(self.ghost_sprite)
             
         # 4. Draw UI
+        
         if self.sidebar:
             self.sidebar.draw()
+            
+        if self.manager:
+            self.manager.draw()
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.mouse_pos = (x, y)
@@ -168,6 +192,9 @@ class CircuitMayhem(arcade.Window):
 
         # 3. Resolution
         for comp in self.grid_manager.world_grid.values():
+            if comp.energy_inbox > 0:
+                comp.trigger_event("on_energy_received", amount=comp.energy_inbox)
+
             comp.energy_stored += comp.energy_inbox
             comp.current_load = comp.energy_inbox 
             comp.energy_inbox = 0

@@ -1,4 +1,5 @@
 import os
+import importlib.util
 import json
 import arcade
 from enum import IntEnum
@@ -20,7 +21,7 @@ class Sides(IntEnum):
 class component(arcade.Sprite):
     def __init__(self, display_name:str="PLACEHOLDER", img=(SPRITE_DIR / "default.png"), scale=1.0, position=(0, 0), rotation=0, connectivity=2, generator=False, max_energy=3, consume=3,
                  current_load=0, max_output=1, thermal_cost=0.1, is_pwrd=False, resistance=0, inputs=[0, 2], img_on=None, _tex_off=None, _tex_on=None,
-                 outputs=[1, 3], energy_inbox=0, energy_outbox=0, integrity=100, temperature=20, cooling_rate=0.1, connected_inputs=None, connected_outputs=None, hazardous_temperature=90):
+                 outputs=[1, 3], energy_inbox=0, energy_outbox=0, integrity=100, temperature=20, cooling_rate=0.1, connected_inputs=None, connected_outputs=None, hazardous_temperature=90, script_module=None):
         
         """Creates a component object."""
         # Keep track of image paths for visual state changes
@@ -31,6 +32,7 @@ class component(arcade.Sprite):
         self.center_x, self.center_y = position
         self.angle = rotation 
         self.dname = display_name
+        self.script_module = script_module
 
         # --- Component Identity ---
         self.connectivity = connectivity 
@@ -89,6 +91,17 @@ class component(arcade.Sprite):
         # Ensure the correct visual is set on creation
         self.update_visual()
 
+        # Trigger creation event
+        self.trigger_event("on_create")
+
+    def trigger_event(self, event_name, **kwargs):
+        """Checks if the attached script has a function with event_name and calls it."""
+        if self.script_module and hasattr(self.script_module, event_name):
+            try:
+                getattr(self.script_module, event_name)(self, **kwargs)
+            except Exception as e:
+                print(f"Script Error ({self.dname} - {event_name}): {e}")
+
     def update_visual(self):
         """Switch the sprite texture based on power state and available on-texture."""
         if getattr(self, '_tex_on', None) and getattr(self, 'is_pwrd', False):
@@ -101,6 +114,8 @@ class component(arcade.Sprite):
         return (side_index + (self.angle // 90)) % 4
     
     def update_physics(self, delta_time):
+        self.trigger_event("on_tick", delta_time=delta_time)
+
         # 1. Heat Generation
         heat_produced = (self.current_load * self.resistance) + (self.current_load * self.thermal_cost)
         self.temperature += heat_produced * delta_time
@@ -124,6 +139,7 @@ class component(arcade.Sprite):
 
     def on_destroyed(self):
         print(f"Component {self.dname} at {self.grid_pos} has melted!")
+        self.trigger_event("on_destroyed")
         self.kill() 
         
     def get_actual_input_sides(self):
@@ -138,7 +154,7 @@ class component(arcade.Sprite):
 # 2. THE GRID MANAGER (The World Logic)
 # ==========================================================
 class GridManager:
-    def __init__(self, tile_size=64):
+    def __init__(self, tile_size=16):
         self.tile_size = tile_size
         self.world_grid = {} 
 
@@ -201,6 +217,19 @@ class ComponentRegistry:
                         
                         # Now load the cleaned string
                         data = json.loads(content)
+
+                        # --- SCRIPT LOADING ---
+                        if "script" in data:
+                            script_path = self.objs_dir / data["script"]
+                            if script_path.exists():
+                                try:
+                                    spec = importlib.util.spec_from_file_location(data["script"], str(script_path))
+                                    mod = importlib.util.module_from_spec(spec)
+                                    spec.loader.exec_module(mod)
+                                    data["script_module"] = mod
+                                except Exception as e:
+                                    print(f"Failed to load script {data['script']}: {e}")
+
                         self.blueprints.update(data)
                 except Exception as e:
                     print(f"Error loading {filename}: {e}")
@@ -245,9 +274,10 @@ class ComponentRegistry:
             hazardous_temperature=data.get('hazardous_temperature', 90),
             cooling_rate=data.get('cooling_rate', 0.1),
             integrity=data.get('integrity', 100),
-            inputs=data.get('inputs', []),
-            outputs=data.get('outputs', []),
+            inputs=data.get('inputs', [0, 2]),
+            outputs=data.get('outputs', [1, 3]),
             img_on=(self.sprite_dir / data['img_on']) if data.get('img_on') else None,
             _tex_off=data.get('_tex_off'),
-            _tex_on=data.get('_tex_on')
+            _tex_on=data.get('_tex_on'),
+            script_module=data.get('script_module')
         )
