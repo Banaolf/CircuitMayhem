@@ -4,3 +4,8 @@
 
 # A-0.0.5
 - Made changes to the Executor
+
+# A-0.0.6
+- Changed licence
+- Removed classes.py
+- Temporarily executor taken out

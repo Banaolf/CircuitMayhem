@@ -1,0 +1,19 @@
+{ 
+    "led": { 
+        "display_name": "Small LED",
+        "img": "led.png", 
+        "scale": 1.0, 
+        "connectivity": 1, 
+        "generator": false, 
+        "max_energy": 0.2, 
+        "consume": 0.09, 
+        "thermal_cost": 0.05, 
+        "max_output": 0, 
+        "inputs": [2], 
+        "outputs": [], 
+        "integrity": 100, 
+        "hazardous_temperature": 110, 
+        "cooling_rate": 0.1,
+        "img_on": "led_1.png"
+    }
+} 

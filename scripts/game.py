@@ -57,8 +57,13 @@ class CircuitMayhem(arcade.Window):
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Circuit Mayhem", fullscreen=True)
         arcade.set_background_color(arcade.color.AIR_SUPERIORITY_BLUE)
         
-        # Path setup
-        self.objs_path = ROOT_FOLDER / "objs"
+        # Path setup (prefer repo `objs` for development; fall back to LOCALAPPDATA)
+        repo_objs = Path(__file__).parent.parent / "objs"
+        if repo_objs.exists() and any(repo_objs.iterdir()):
+            self.objs_path = repo_objs
+        else:
+            self.objs_path = ROOT_FOLDER / "objs"
+        print(f"Using objs path: {self.objs_path}")
         
         # Core Systems
         self.grid_manager = GridManager(tile_size=TILE_SIZE)
@@ -167,7 +172,11 @@ class CircuitMayhem(arcade.Window):
             comp.current_load = comp.energy_inbox 
             comp.energy_inbox = 0
             comp.update_physics(delta_time)
-            comp.is_pwrd = comp.energy_stored > 0
+            # Treat a component as "powered" only when it is receiving current this tick
+            comp.is_pwrd = comp.current_load > 0
+            # Update visual state (e.g., LEDs that have an `img_on`)
+            if hasattr(comp, 'update_visual'):
+                comp.update_visual()
 
 def main():
     game = CircuitMayhem()

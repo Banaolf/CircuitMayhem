@@ -19,10 +19,14 @@ class Sides(IntEnum):
 # ==========================================================
 class component(arcade.Sprite):
     def __init__(self, display_name:str="PLACEHOLDER", img=(SPRITE_DIR / "default.png"), scale=1.0, position=(0, 0), rotation=0, connectivity=2, generator=False, max_energy=3, consume=3,
-                 current_load=0, max_output=1, thermal_cost=0.1, is_pwrd=False, resistance=0, inputs=[0, 2],
+                 current_load=0, max_output=1, thermal_cost=0.1, is_pwrd=False, resistance=0, inputs=[0, 2], img_on=None, _tex_off=None, _tex_on=None,
                  outputs=[1, 3], energy_inbox=0, energy_outbox=0, integrity=100, temperature=20, cooling_rate=0.1, connected_inputs=None, connected_outputs=None, hazardous_temperature=90):
         
         """Creates a component object."""
+        # Keep track of image paths for visual state changes
+        self.img_path = img
+        self.img_on_path = img_on if img_on is None or isinstance(img_on, (str, Path)) else None
+
         super().__init__(img, scale)
         self.center_x, self.center_y = position
         self.angle = rotation 
@@ -62,6 +66,36 @@ class component(arcade.Sprite):
         
         self.RUX_TO_SEC = 1 / 3600
         self.grid_pos = (0, 0)
+
+        # --- Textures for visual states (use registry-provided textures if available) ---
+        if _tex_off is not None:
+            self._tex_off = _tex_off
+        else:
+            try:
+                self._tex_off = arcade.load_texture(self.img_path)
+            except Exception:
+                self._tex_off = None
+
+        if _tex_on is not None:
+            self._tex_on = _tex_on
+        elif self.img_on_path:
+            try:
+                self._tex_on = arcade.load_texture(self.img_on_path)
+            except Exception:
+                self._tex_on = None
+        else:
+            self._tex_on = None
+
+        # Ensure the correct visual is set on creation
+        self.update_visual()
+
+    def update_visual(self):
+        """Switch the sprite texture based on power state and available on-texture."""
+        if getattr(self, '_tex_on', None) and getattr(self, 'is_pwrd', False):
+            self.texture = self._tex_on
+        elif getattr(self, '_tex_off', None):
+            self.texture = self._tex_off
+        # If textures failed to load for some reason, do nothing and let the sprite keep its current state
 
     def get_port_direction(self, side_index):
         return (side_index + (self.angle // 90)) % 4
@@ -170,6 +204,24 @@ class ComponentRegistry:
                         self.blueprints.update(data)
                 except Exception as e:
                     print(f"Error loading {filename}: {e}")
+
+        # Preload textures for each blueprint to avoid per-component texture loading
+        for comp_id, data in self.blueprints.items():
+            try:
+                data['_tex_off'] = arcade.load_texture(self.sprite_dir / data['img'])
+            except Exception as e:
+                data['_tex_off'] = None
+                print(f"Failed to load texture for {comp_id}: {e}")
+
+            if data.get('img_on'):
+                try:
+                    data['_tex_on'] = arcade.load_texture(self.sprite_dir / data['img_on'])
+                except Exception as e:
+                    data['_tex_on'] = None
+                    print(f"Failed to load on-texture for {comp_id}: {e}")
+            else:
+                data['_tex_on'] = None
+
         print(f"Registry: {len(self.blueprints)} blueprints pre-cached.")
 
     def create_component(self, comp_id, grid_pos):
@@ -193,5 +245,8 @@ class ComponentRegistry:
             cooling_rate=data.get('cooling_rate', 0.1),
             integrity=data.get('integrity', 100),
             inputs=data.get('inputs', []),
-            outputs=data.get('outputs', [])
+            outputs=data.get('outputs', []),
+            img_on=(self.sprite_dir / data['img_on']) if data.get('img_on') else None,
+            _tex_off=data.get('_tex_off'),
+            _tex_on=data.get('_tex_on')
         )
