@@ -10,3 +10,8 @@
 - Removed classes.py
 - Temporarily executor taken out
 - Added LED
+
+# A-0.0.7
+- Made support for future scriptable objects
+- Added a close button
+- Added a horizontal wire
